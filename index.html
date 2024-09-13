@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>MonApp</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #ffeac5;
+      }
+      .container {
+        background-color: #ffdbb5;
+        color: #603f26;
+      }
+      .btn-primary {
+        background-color: #6c4e31;
+        color: white;
+      }
+      .btn-secondary {
+        background-color: #603f26;
+        color: white;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 50;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+      .modal-content {
+        background-color: #ffdbb5;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 400px;
+      }
+      .balance-display {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .balance-display h1 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .balance-display span {
+        font-size: 1.5rem;
+        color: #777;
+      }
+      .saving-goal {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .saving-goal h2 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .saving-goal span {
+        font-size: 1rem;
+        color: #777;
+      }
+
+      input[type='number']::-webkit-outer-spin-button,
+      input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      input[type='number'] {
+        -moz-appearance: textfield;
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen">
+    <div class="container p-6 rounded-lg shadow-md w-full max-w-lg">
+      <h1 class="text-2xl font-bold mb-4">MonApp</h1>
+
+      <!-- Balance Info -->
+      <div class="balance-display">
+        <h1>Balance</h1>
+        <span id="balance">Rp 0,00</span>
+      </div>
+
+      <!-- Saving Progress Info -->
+      <div class="saving-goal">
+        <h2>Saving Progress: <span id="current-savings">Rp 0,00</span></h2>
+        <h2>Goal Progress: <span id="progress">0%</span></h2>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Income</label>
+        <input
+          type="number"
+          id="income"
+          class="mt-1 p-2 border rounded w-full"
+          placeholder="Enter your income"
+        />
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium">Expense</label>
+        <input
+          type="number"
+          id="expense"
+          class="mt-1 p-2 border rounded w-full"
+          placeholder="Enter your expenses"
+        />
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium">Expense Category</label>
+        <select
+          id="category"
+          class="mt-1 p-2 border rounded w-full"
+        >
+          <option value="food">Food</option>
+          <option value="transportation">Transportation</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="bills">Bills</option>
+          <option value="saving">Saving</option>
+          <option value="others">Others</option>
+        </select>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium">Saving Goal</label>
+        <input
+          type="number"
+          id="goal"
+          class="mt-1 p-2 border rounded w-full"
+          placeholder="Enter your savings goal"
+        />
+      </div>
+      <button
+        id="calculate"
+        class="mt-6 btn-primary text-white p-2 rounded w-full"
+      >
+        Calculate Balance
+      </button>
+
+      <h2 class="mt-6 text-xl font-bold">Expense Summary</h2>
+      <ul
+        id="expense-summary"
+        class="mt-2"
+      ></ul>
+
+      <button
+        id="reset"
+        class="mt-6 btn-secondary text-white p-2 rounded w-full"
+      >
+        Reset
+      </button>
+    </div>
+
+    <!-- Modal for Reset Confirmation -->
+    <div
+      id="resetModal"
+      class="modal"
+    >
+      <div class="modal-content p-6 rounded-lg">
+        <p class="text-lg font-bold mb-4">Resetting the app will delete your data. Are you sure you want to reset?</p>
+        <div class="flex justify-between">
+          <button
+            id="proceedReset"
+            class="btn-primary p-2 rounded w-1/3"
+          >
+            Yes
+          </button>
+          <button
+            id="cancelReset"
+            class="btn-secondary p-2 rounded w-1/3"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Modal for Reset Options -->
+    <div
+      id="resetOptionsModal"
+      class="modal"
+    >
+      <div class="modal-content p-6 rounded-lg">
+        <p class="text-lg font-bold mb-4">What would you like to reset?</p>
+        <div class="flex justify-between">
+          <button
+            id="resetAllData"
+            class="btn-primary p-2 rounded w-1/3"
+          >
+            Reset All
+          </button>
+          <button
+            id="resetSummaryOnly"
+            class="btn-secondary p-2 rounded w-1/3"
+          >
+            Reset Expenses
+          </button>
+          <button
+            id="cancelOptionsReset"
+            class="btn-secondary p-2 rounded w-1/3"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let incomeValue = 0;
+      let expenseTracker = {};
+      let currentSavings = 0;
+      let goalValue = 0;
+
+      // Function to format numbers as Rupiah currency
+      function formatRupiah(number) {
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+          .format(number)
+          .replace('IDR', 'Rp.');
+      }
+
+      // Function to round numbers to avoid floating-point errors
+      function roundNumber(num) {
+        return Math.round(num);
+      }
+
+      // Function to update balance and expense summary
+      function updateSummary() {
+        const totalExpenses = Object.values(expenseTracker).reduce((acc, amount) => acc + amount, 0);
+        const balance = roundNumber(incomeValue - totalExpenses);
+        const progress = goalValue > 0 ? roundNumber((currentSavings / goalValue) * 100) : 0;
+
+        document.getElementById('balance').innerText = formatRupiah(balance);
+        document.getElementById('progress').innerText = progress.toFixed(2) + '%';
+        document.getElementById('current-savings').innerText = formatRupiah(currentSavings);
+
+        localStorage.setItem('balance', balance);
+        localStorage.setItem('currentSavings', currentSavings);
+        localStorage.setItem('goal', goalValue);
+        localStorage.setItem('progress', progress.toFixed(2));
+      }
+
+      // Function to add or update an expense entry in the summary
+      function addOrUpdateExpense(category, amount) {
+        if (!expenseTracker[category]) {
+          expenseTracker[category] = 0;
+        }
+        expenseTracker[category] += roundNumber(amount);
+
+        if (category === 'saving') {
+          currentSavings += roundNumber(amount);
+        }
+
+        const expenseSummary = document.getElementById('expense-summary');
+        let listItem = document.querySelector(`#expense-summary li[data-category="${category}"]`);
+        if (!listItem) {
+          listItem = document.createElement('li');
+          listItem.setAttribute('data-category', category);
+          expenseSummary.appendChild(listItem);
+        }
+        listItem.textContent = `${category}: ${formatRupiah(expenseTracker[category])}`;
+
+        localStorage.setItem('expenses', JSON.stringify(expenseTracker));
+        localStorage.setItem('currentSavings', currentSavings);
+      }
+
+      // Event listener for calculating balance and updating UI
+      document.getElementById('calculate').addEventListener('click', function () {
+        const income = roundNumber(Number(document.getElementById('income').value)) || 0;
+        const expense = roundNumber(Number(document.getElementById('expense').value)) || 0;
+        goalValue = roundNumber(Number(document.getElementById('goal').value)) || 0;
+        const category = document.getElementById('category').value;
+
+        // Store the income only if a new income value is provided
+        if (income > 0) {
+          incomeValue += income;
+        }
+
+        // Add or update the expense
+        if (expense > 0) {
+          addOrUpdateExpense(category, expense);
+        }
+
+        // Update the summary
+        updateSummary();
+
+        // Clear the income and expense fields
+        document.getElementById('income').value = '';
+        document.getElementById('expense').value = '';
+      });
+
+      // Event listener for resetting the app
+      document.getElementById('reset').addEventListener('click', function () {
+        document.getElementById('resetModal').style.display = 'block';
+      });
+
+      // Event listener for canceling reset
+      document.getElementById('cancelReset').addEventListener('click', function () {
+        document.getElementById('resetModal').style.display = 'none';
+      });
+
+      // Event listener for proceeding with reset
+      document.getElementById('proceedReset').addEventListener('click', function () {
+        document.getElementById('resetModal').style.display = 'none';
+        document.getElementById('resetOptionsModal').style.display = 'block';
+      });
+
+      // Event listener for resetting all data
+      document.getElementById('resetAllData').addEventListener('click', function () {
+        expenseTracker = {};
+        incomeValue = 0;
+        currentSavings = 0;
+        goalValue = 0;
+        document.getElementById('income').value = '';
+        document.getElementById('expense').value = '';
+        document.getElementById('goal').value = '';
+        document.getElementById('expense-summary').innerHTML = '';
+        updateSummary();
+        localStorage.clear();
+        document.getElementById('resetOptionsModal').style.display = 'none';
+      });
+
+      // Event listener for resetting only expense summary
+      document.getElementById('resetSummaryOnly').addEventListener('click', function () {
+        // Clear the expense tracker and the expense summary display
+        expenseTracker = {};
+        document.getElementById('expense-summary').innerHTML = '';
+
+        // Update local storage to remove expenses but keep balance and other data
+        localStorage.removeItem('expenses');
+
+        // Hide the reset options modal immediately after resetting
+        document.getElementById('resetOptionsModal').style.display = 'none';
+      });
+
+      // Event listener for canceling reset options
+      document.getElementById('cancelOptionsReset').addEventListener('click', function () {
+        document.getElementById('resetOptionsModal').style.display = 'none';
+      });
+
+      // On load, retrieve saved data from localStorage and update UI
+      document.addEventListener('DOMContentLoaded', function () {
+        const savedBalance = localStorage.getItem('balance');
+        const savedCurrentSavings = localStorage.getItem('currentSavings');
+        const savedGoal = localStorage.getItem('goal');
+        const savedProgress = localStorage.getItem('progress');
+        const savedExpenses = JSON.parse(localStorage.getItem('expenses'));
+
+        if (savedBalance !== null) {
+          document.getElementById('balance').innerText = formatRupiah(Number(savedBalance));
+          incomeValue = Number(savedBalance) + Object.values(savedExpenses || {}).reduce((acc, amount) => acc + amount, 0);
+        }
+        if (savedCurrentSavings !== null) {
+          currentSavings = Number(savedCurrentSavings);
+          document.getElementById('current-savings').innerText = formatRupiah(currentSavings);
+        }
+        if (savedGoal !== null && savedProgress !== null) {
+          goalValue = Number(savedGoal);
+          document.getElementById('goal').value = goalValue;
+          document.getElementById('progress').innerText = savedProgress + '%';
+        }
+        if (savedExpenses) {
+          expenseTracker = savedExpenses;
+          const expenseSummary = document.getElementById('expense-summary');
+          expenseSummary.innerHTML = '';
+          for (const [category, amount] of Object.entries(expenseTracker)) {
+            const listItem = document.createElement('li');
+            listItem.setAttribute('data-category', category);
+            listItem.textContent = `${category}: ${formatRupiah(amount)}`;
+            expenseSummary.appendChild(listItem);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
